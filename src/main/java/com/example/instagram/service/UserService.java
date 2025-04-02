@@ -3,6 +3,8 @@ package com.example.instagram.service;
 import com.example.instagram.dto.request.UserRequestDTO;
 import com.example.instagram.dto.response.UserResponseDTO;
 import com.example.instagram.entity.User;
+import com.example.instagram.exception.AppException;
+import com.example.instagram.exception.ErrorCode;
 import com.example.instagram.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,10 +19,11 @@ public class UserService {
     private UserRepository userRepository;
     PasswordEncoder passwordEncoder=new BCryptPasswordEncoder(10);
 
+    //register
     @Transactional
     public UserResponseDTO register(UserRequestDTO request){
         if(userRepository.existsByUsername(request.getUsername())){
-            throw new RuntimeException("USER EXISTED");
+            throw new AppException(ErrorCode.USER_EXISTED);
         }
         if(userRepository.existsByEmail(request.getEmail())){
             throw new RuntimeException("USER EXISTED");
@@ -34,7 +37,10 @@ public class UserService {
         return convertToDTO(userRepository.save(user));
     }
 
+    //login
 
+
+    // converto sang DTO
     private UserResponseDTO convertToDTO(User user) {
         UserResponseDTO dto = new UserResponseDTO();
         dto.setId(user.getId());
