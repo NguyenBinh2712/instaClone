@@ -1,5 +1,7 @@
 package com.example.instagram.repository;
 
+import com.example.instagram.dto.request.UserRequestDTO;
+import com.example.instagram.dto.response.UserResponseDTO;
 import com.example.instagram.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

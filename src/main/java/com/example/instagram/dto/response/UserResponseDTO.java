@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -22,4 +23,6 @@ public class UserResponseDTO {
     private int followingCount;
     private int postsCount;
     private boolean isFollowing;
+    private Set<String> roles;
+
 }

@@ -4,6 +4,7 @@ import com.example.instagram.dto.request.AuthRequest;
 import com.example.instagram.dto.request.IntrospectRequest;
 import com.example.instagram.dto.response.AuthResponse;
 import com.example.instagram.dto.response.IntrospectResponse;
+import com.example.instagram.entity.User;
 import com.example.instagram.exception.AppException;
 import com.example.instagram.exception.ErrorCode;
 import com.example.instagram.repository.UserRepository;
@@ -22,12 +23,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.Date;
+import java.util.StringJoiner;
 
 @Slf4j
 @Service
@@ -37,6 +41,9 @@ public class AuthService {
 
     @NonFinal
     protected static final String signKey="GiiFTXzL8H+f9EYUwYys2N1X2QkdS38cgckeTiN5LX2FC9efQ1mOsD1xAv85O8PO";
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public IntrospectResponse introspect(IntrospectRequest request)
             throws JOSEException, ParseException {
@@ -54,14 +61,13 @@ public class AuthService {
     public AuthResponse authenticated(AuthRequest authRequest){
         var user=userRepository.findByUsername(authRequest.getUsername())
                 .orElseThrow(()->new AppException(ErrorCode.USER_NOT_FOUND));
-        PasswordEncoder passwordEncoder= new BCryptPasswordEncoder(10);
         boolean authenticated= passwordEncoder.matches(authRequest.getPassword(),user.getPassword());
 
         if (!authenticated){
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        var token=generateToken(authRequest.getUsername());
+        var token=generateToken(user);
         return AuthResponse.builder()
                 .token(token)
                 .authenticated(true)
@@ -69,17 +75,18 @@ public class AuthService {
     }
 
     // tao khoa token
-    private String generateToken(String username){
+    private String generateToken(User user){
         JWSHeader jwsHeader=new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet=new JWTClaimsSet.Builder()
-                .subject(username)
+                .subject(user.getUsername())
                 .issuer("binh.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
                 ))
-                .claim("user","binh")
+                .claim("scope",buildScope(user))
+
                 .build();
         Payload payload=new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject=new JWSObject(jwsHeader,payload);
@@ -92,5 +99,13 @@ public class AuthService {
             log.error("Can not create token !!!",e);
             throw new RuntimeException(e);
         }
+    }
+
+    private String buildScope(User user){
+        StringJoiner stringJoiner=new StringJoiner(" ");
+        if(!CollectionUtils.isEmpty(user.getRoles())){
+            user.getRoles().forEach(role->stringJoiner.add(role));
+        }
+        return stringJoiner.toString();
     }
 }

@@ -1,13 +1,16 @@
 package com.example.instagram;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@Slf4j
 @SpringBootApplication
-public class InstagramApplication {
+public class  InstagramApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(InstagramApplication.class, args);
+
 	}
 
 }
